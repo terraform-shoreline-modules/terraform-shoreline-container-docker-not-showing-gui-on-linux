@@ -1,0 +1,138 @@
+{
+  "name": "gui_not_displaying_in_docker_container_on_linux",
+  "description": "This incident type occurs when a software engineer is working in a Linux environment and uses Docker to launch a containerized GUI application, but the GUI does not display on their screen. This could be due to a number of reasons, such as incorrect configuration of the Docker container or display settings, missing dependencies, or incompatible graphics drivers. This can cause frustration and hinder progress for the engineer, as they are unable to visualize and interact with the application as intended.",
+  "params": [
+    {
+      "name": "IMAGE_NAME",
+      "value": ""
+    },
+    {
+      "name": "YOUR_GUI_COMPONENT",
+      "value": ""
+    },
+    {
+      "name": "CONTAINER_NAME",
+      "value": ""
+    },
+    {
+      "name": "APPLICATION_NAME",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## GUI not displaying in Docker container on Linux.\nThis incident type occurs when a software engineer is working in a Linux environment and uses Docker to launch a containerized GUI application, but the GUI does not display on their screen. This could be due to a number of reasons, such as incorrect configuration of the Docker container or display settings, missing dependencies, or incompatible graphics drivers. This can cause frustration and hinder progress for the engineer, as they are unable to visualize and interact with the application as intended."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the container is running"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `docker ps`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the correct display is set"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `echo $DISPLAY`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the X11 socket is mounted"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `docker inspect ${CONTAINER_NAME} | grep -i mounts`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the application is installed in the container"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `docker exec ${CONTAINER_NAME} which ${APPLICATION_NAME}`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the user has the necessary permissions"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `xhost +local:root`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the container has access to the host's graphics drivers"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `docker run -it --rm --device /dev/dri ${IMAGE_NAME} glxinfo | grep \"OpenGL vendor string\"`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## The Docker image used to launch the containerized GUI application may be missing necessary dependencies or libraries required for the GUI to display properly."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_validate_docker_dependencies($IMAGE_NAME, $APPLICATION_NAME)"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Verify that the Docker container has access to the display server, either by setting the DISPLAY environment variable or by mounting the X11 socket file."
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_docker_x11_mount()"
+    }
+  ]
+}
